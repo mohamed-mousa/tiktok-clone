@@ -1,4 +1,6 @@
 <template>
+  <UploadError :errorType="errorType" />
+
   <UploadLayout>
     <div
       class="w-full mt-[80px] mb-[40px] bg-white shadow-lg rounded-md py-6 md:px-10 px-4"
@@ -10,7 +12,10 @@
 
       <div class="mt-8 md:flex gap-6">
         <label
-          v-if="false"
+          v-if="!fileDisplay"
+          @drop.prevent="onDrop"
+          @dragover.prevent=""
+          for="fileInput"
           class="md:mx-0 mx-auto mt-4 mb-6 flex flex-col text-center justify-center w-full max-w-[260px] h-[470px] items-center p-3 border-2 border-dashed border-gray-300 rounded-lg hover:bg-gray-100 cursor-pointer"
         >
           <Icon name="majesticons:cloud-upload" size="40" color="#b3b3b1" />
@@ -26,7 +31,14 @@
           >
             Select file
           </div>
-          <input type="file" id="fileInput" ref="file" accept=".mp4" hidden />
+          <input
+            @change="onChange"
+            type="file"
+            id="fileInput"
+            ref="file"
+            accept=".mp4"
+            hidden
+          />
         </label>
 
         <div
@@ -38,13 +50,9 @@
             src="~/assets/images/mobile-case.png"
             class="absolute z-20 pointer-events-none"
           />
-          <img
-            src="~/assets/images/tiktok-logo-white.png"
-            class="absolute z-20 right-4 bottom-6"
-            width="90"
-          />
+          <img class="absolute z-20 right-4 bottom-6" width="90" />
           <video
-            :src="url"
+            :src="fileDisplay"
             class="rounded-xl absolute z-10 p-[13px] object-cover h-full"
             loop
             muted
@@ -61,15 +69,70 @@
                 class="min-w-[16px]"
               />
               <div class="text-[11px] pl-1 truncate text-ellipsis">
-                Video name
+                {{ fileData.name }}
               </div>
             </div>
 
-            <button class="text-[11px] ml-2 font-semibold">Change</button>
+            <button @click="clearVideo" class="text-[11px] ml-2 font-semibold">
+              Change
+            </button>
           </div>
         </div>
 
-        <div class="mt-4 mb-6"></div>
+        <div class="mt-4 mb-6">
+          <div class="flex bg-[#f8f8f8] py-4 px-6">
+            <div>
+              <Icon class="mr-4" size="20" name="mdi:box-cutter-off" />
+            </div>
+
+            <div>
+              <div class="text-semibold text-[15px] mb-1.5">
+                Divide videos and edit
+              </div>
+              <div class="text-semibold text-[13px] text-gray-400">
+                You can quickly divide videos into multiple parts, remove
+                redundant parts and turn landscape videos into portrait videos
+              </div>
+            </div>
+            <div
+              class="flex justify-end max-x-[130px] w-full h-full text-center my-auto"
+            >
+              <button
+                class="px-8 py-1.5 text-white text-[15px] bg-[#f02c56] rounded-sm"
+              >
+                Edit
+              </button>
+            </div>
+          </div>
+          <div class="mt-5">
+            <div class="flex items-center justify-between">
+              <div class="mb-1 text-[15px]">Caption</div>
+              <div class="text-gray-400 text-[12px]">
+                {{ caption.length }}/150
+              </div>
+            </div>
+            <input
+              v-model="caption"
+              type="text"
+              maxlength="150"
+              class="w-full border p-2.5 rounded-md focus:outline-none"
+            />
+          </div>
+
+          <div class="flex gap-3">
+            <button
+              @click="discard"
+              class="px-10 py-2.5 mt-8 border text-[16px] hover:bg-gray-100 rounded-sm"
+            >
+              Discard
+            </button>
+            <button
+              class="px-10 py-2.5 mt-8 border text-[16px] text-white bg-[#f02c56] rounded-sm"
+            >
+              Post
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </UploadLayout>
@@ -77,6 +140,56 @@
 
 <script setup>
 import UploadLayout from "~/layouts/UploadLayout.vue";
-let url =
-  "https://download-video.akamaized.net/v3-1/playback/d673f5b7-4fa6-4eb7-8e33-a9c84ccb1a93/87cf2286?__token__=st=1702374843~exp=1702389243~acl=%2Fv3-1%2Fplayback%2Fd673f5b7-4fa6-4eb7-8e33-a9c84ccb1a93%2F87cf2286%2A~hmac=2cad7ecf7b4b6c91a1e44dd6de95ee3755678baefe397b2ad72d7a7fefa2f486&r=dXMtd2VzdDE%3D";
+
+let file = ref(null);
+let fileDisplay = ref(null);
+let errorType = ref(null);
+let caption = ref("");
+let fileData = ref(null);
+let errors = ref(null);
+let isUploading = ref(null);
+
+watch(
+  () => caption.value,
+  (caption) => {
+    if (caption.length >= 150) {
+      errorType.value = "caption";
+      return;
+    }
+    errorType.value = null;
+  }
+);
+
+const onChange = () => {
+  fileDisplay.value = URL.createObjectURL(file.value.files[0]);
+  fileData.value = file.value.files[0];
+};
+const onDrop = (e) => {
+  errorType.value = "";
+  file.value = e.dataTransfer.files[0];
+  fileData.value = e.dataTransfer.files[0];
+  let extension = file.value.name.substring(
+    file.value.name.lastIndexOf(".") + 1
+  );
+
+  if (extension !== "mp4") {
+    errorType = "file";
+    return;
+  }
+
+  fileDisplay.value = URL.createObjectURL(e.dataTransfer.files[0]);
+};
+
+const discard = () => {
+  file.value = null;
+  fileDisplay.value = null;
+  fileData.value = null;
+  caption.value = "";
+};
+
+const clearVideo = () => {
+  file.value = null;
+  fileDisplay.value = null;
+  fileData.value = null;
+};
 </script>
