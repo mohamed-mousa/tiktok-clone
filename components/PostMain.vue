@@ -2,7 +2,7 @@
   <div class="flex border-b py-6" id="PostMain">
     <div class="cursor-pointer">
       <img
-        src="https://picsum.photos/id/8/300/320"
+        src="~/assets/images/profile.jpg"
         alt="user"
         width="60"
         height="60"
@@ -49,7 +49,7 @@
           class="relative min-h-[480px] max-h-[580px] max-w-[260px] flex items-center bg-black rounded-xl cursor-pointer"
         >
           <video
-            :src="url"
+            src="~/assets/test.mp4"
             class="rounded-xl object-cover mx-auto h-full"
             loop
             ref="video"
@@ -95,7 +95,5 @@
 
 <script setup>
 let video = ref(null);
-let url =
-  "https://download-video.akamaized.net/v3-1/playback/d673f5b7-4fa6-4eb7-8e33-a9c84ccb1a93/87cf2286?__token__=st=1702374843~exp=1702389243~acl=%2Fv3-1%2Fplayback%2Fd673f5b7-4fa6-4eb7-8e33-a9c84ccb1a93%2F87cf2286%2A~hmac=2cad7ecf7b4b6c91a1e44dd6de95ee3755678baefe397b2ad72d7a7fefa2f486&r=dXMtd2VzdDE%3D";
 onMounted(() => video.value.play());
 </script>
